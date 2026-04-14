@@ -1,0 +1,105 @@
+name: Build (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      qtbase_branch:
+        description: 'qtbase branch reference'
+        required: true
+        type: string
+      qtsvg_branch:
+        description: 'qtsvg branch reference'
+        required: true
+        type: string
+      create_release:
+        description: 'Create draft GitHub releases instead of uploading artifacts'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: 'Build'
+    runs-on: 'ubuntu-latest'
+
+    env:
+      QTBASE_BRANCH: ${{ inputs.qtbase_branch }}
+      QTSVG_BRANCH: ${{ inputs.qtsvg_branch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build
+        shell: bash
+        run: ./build.docker.sh
+
+      - name: Print logfiles and other info in case of failure
+        if: ${{ failure() }}
+        run: |
+          echo ==== CMakeOutput.log ====
+          cat build/CMakeFiles/CMakeOutput.log
+          echo
+          echo ==== CMakeError.log ====
+          cat build/CMakeFiles/CMakeError.log
+          echo ==== CMakeCache.txt ====
+          cat build/CMakeCache.txt
+
+      # --- Artifact upload (CI builds) ---
+      - name: Upload qtbase wasi install directory
+        if: ${{ !inputs.create_release }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: qtbase-wasm32-wasi-install
+          include-hidden-files: true
+          path: ./wasm32-wasi-install/qtbase/**
+
+      - name: Upload qtsvg wasi install directory
+        if: ${{ !inputs.create_release }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: qtsvg-wasm32-wasi-install
+          include-hidden-files: true
+          path: ./wasm32-wasi-install/qtsvg/**
+
+      # --- Release creation ---
+      - name: Generate date and sanitized refs
+        if: ${{ inputs.create_release }}
+        id: meta
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          QTBASE_TAG="qtbase-$(echo "$QTBASE_BRANCH" | tr '#' '-')-${DATE}"
+          QTSVG_TAG="qtsvg-$(echo "$QTSVG_BRANCH" | tr '#' '-')-${DATE}"
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+          echo "qtbase_tag=${QTBASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "qtsvg_tag=${QTSVG_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Package qtbase install directory
+        if: ${{ inputs.create_release }}
+        run: tar -czf qtbase-wasm32-wasi-install.tar.gz -C wasm32-wasi-install/qtbase .
+
+      - name: Package qtsvg install directory
+        if: ${{ inputs.create_release }}
+        run: tar -czf qtsvg-wasm32-wasi-install.tar.gz -C wasm32-wasi-install/qtsvg .
+
+      - name: Create qtbase draft release
+        if: ${{ inputs.create_release }}
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+          tag_name: ${{ steps.meta.outputs.qtbase_tag }}
+          name: "qtbase@${{ env.QTBASE_BRANCH }}#${{ steps.meta.outputs.date }}"
+          draft: true
+          files: qtbase-wasm32-wasi-install.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create qtsvg draft release
+        if: ${{ inputs.create_release }}
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+          tag_name: ${{ steps.meta.outputs.qtsvg_tag }}
+          name: "qtsvg@${{ env.QTSVG_BRANCH }}#${{ steps.meta.outputs.date }}"
+          draft: true
+          files: qtsvg-wasm32-wasi-install.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

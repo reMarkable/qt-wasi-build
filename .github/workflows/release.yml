@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      qtbase_branch:
+        description: 'qtbase branch reference'
+        required: true
+        default: '6.10.3#wasi'
+      qtsvg_branch:
+        description: 'qtsvg branch reference'
+        required: true
+        default: '6.10.3'
+  repository_dispatch:
+    types: [build-release]
+
+jobs:
+  resolve-inputs:
+    name: 'Resolve Inputs'
+    runs-on: 'ubuntu-latest'
+    outputs:
+      qtbase_branch: ${{ steps.resolve.outputs.qtbase_branch }}
+      qtsvg_branch: ${{ steps.resolve.outputs.qtsvg_branch }}
+    steps:
+      - name: Resolve branch references
+        id: resolve
+        run: |
+          QTBASE="${{ inputs.qtbase_branch || github.event.client_payload.qtbase_branch }}"
+          QTSVG="${{ inputs.qtsvg_branch || github.event.client_payload.qtsvg_branch }}"
+          if [ -z "$QTBASE" ] || [ -z "$QTSVG" ]; then
+            echo "::error::Both qtbase_branch and qtsvg_branch must be provided"
+            exit 1
+          fi
+          echo "qtbase_branch=${QTBASE}" >> "$GITHUB_OUTPUT"
+          echo "qtsvg_branch=${QTSVG}" >> "$GITHUB_OUTPUT"
+          echo "Building qtbase@${QTBASE} and qtsvg@${QTSVG}"
+
+  build-and-release:
+    needs: resolve-inputs
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      qtbase_branch: ${{ needs.resolve-inputs.outputs.qtbase_branch }}
+      qtsvg_branch: ${{ needs.resolve-inputs.outputs.qtsvg_branch }}
+      create_release: true

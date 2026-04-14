@@ -9,6 +9,10 @@ cd "$script_dir"
 
 wasi_toolchain_file="$script_dir/wasi-sdk.toolchain.cmake"
 
+# Branch references (configurable via environment variables)
+QTBASE_BRANCH="${QTBASE_BRANCH:-6.10.3#wasi}"
+QTSVG_BRANCH="${QTSVG_BRANCH:-6.10.3}"
+
 # clone wasi-sdk
 if [ ! -d wasi-sdk ]; then
     git clone https://github.com/rioam2/wasi-sdk-toolchain.git wasi-sdk
@@ -20,16 +24,16 @@ cd "$script_dir"
 
 # should we clone or use submodules?
 if [ ! -d qtbase ]; then
-    git clone https://github.com/reMarkable/qtbase --branch 6.10.3#wasi --depth 1
+    git clone https://github.com/reMarkable/qtbase --branch "$QTBASE_BRANCH" --depth 1
 else
     echo "qtbase already exists, skipping clone"
     # should we check the branch?
-    # git reset --hard origin/6.10.3#wasi
+    # git reset --hard origin/$QTBASE_BRANCH
 fi
 
 ### NO PATCHES NEEDED, take upstream 6.10.3 as is
 if [ ! -d qtsvg ]; then
-    git clone https://github.com/reMarkable/qtsvg --branch 6.10.3 --depth 1
+    git clone https://github.com/reMarkable/qtsvg --branch "$QTSVG_BRANCH" --depth 1
 else
     echo "qtsvg already exists, skipping clone"
     # should we check the branch?
