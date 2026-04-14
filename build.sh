@@ -20,7 +20,7 @@ cd "$script_dir"
 
 # should we clone or use submodules?
 if [ ! -d qtbase ]; then
-    git clone git@github.com:reMarkable/qtbase --branch 6.10.3#wasi --depth 1
+    git clone https://github.com/reMarkable/qtbase --branch 6.10.3#wasi --depth 1
 else
     echo "qtbase already exists, skipping clone"
     # should we check the branch?
@@ -29,7 +29,7 @@ fi
 
 ### NO PATCHES NEEDED, take upstream 6.10.3 as is
 if [ ! -d qtsvg ]; then
-    git clone git@github.com:reMarkable/qtsvg --branch 6.10.3 --depth 1
+    git clone https://github.com/reMarkable/qtsvg --branch 6.10.3 --depth 1
 else
     echo "qtsvg already exists, skipping clone"
     # should we check the branch?
