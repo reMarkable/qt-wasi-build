@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "::group::Docker setup"
+
 set -e
 
 docker build . -t qt-wasm32-wasi-worker
