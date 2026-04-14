@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
-### HOST BUILD
 
+echo "::endgroup::"
+echo "::group::Clone repositories"
 set -e
 set -x
 
@@ -34,7 +35,9 @@ else
     echo "qtsvg already exists, skipping clone"
     # should we check the branch?
 fi
+echo "::endgroup::"
 
+echo "::group::Configure qtbase for host"
 # We need a host build to provide native tools for the cross build
 host_build_dir="$script_dir/host-build"
 mkdir -p $host_build_dir
@@ -44,11 +47,14 @@ cd $host_build_dir
     -nomake tests \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_GENERATOR=Ninja
+echo "::endgroup::"
 
+echo "::group::Build host tools"
 cmake --build . --target host_tools --parallel
 cd "$script_dir"
+echo "::endgroup::"
 
-
+echo "::group::Configure qtbase for wasm32-wasi"
 cmake qtbase \
     -B qtbase/build/wasi \
     -DCMAKE_TOOLCHAIN_FILE="$wasi_toolchain_file" \
@@ -345,16 +351,25 @@ cmake qtbase \
     -DQT_USE_BUNDLED_BundledZLIB=ON \
     -DUNIX:BOOL=ON \
     -DWASM:BOOL=OFF
+echo "::endgroup::"
 
+echo "::group::Build qtbase for wasm32-wasi"
 cd $script_dir
 cmake --build qtbase/build/wasi --parallel
+echo "::endgroup::"
+echo "::group::Install qtbase for wasm32-wasi"
 cmake --install qtbase/build/wasi --prefix wasm32-wasi-install/qtbase/
+echo "::endgroup::"
 
-
+echo "::group::Configure qtsvg for wasm32-wasi"
 cd qtsvg
 mkdir -p build/wasi
 cd build/wasi
 $script_dir/wasm32-wasi-install/qtbase/bin/qt-configure-module $script_dir/qtsvg
+echo "::endgroup::"
+echo "::group::Build qtsvg for wasm32-wasi"
 cmake --build . --parallel
+echo "::endgroup::"
+echo "::group::Install qtsvg for wasm32-wasi"
 cmake --install . --prefix $script_dir/wasm32-wasi-install/qtsvg/
-
+echo "::endgroup::"
