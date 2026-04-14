@@ -36,17 +36,16 @@ else
 fi
 
 # We need a host build to provide native tools for the cross build
-mkdir -p build/host
-cd build/host
+host_build_dir="$script_dir/host-build"
+mkdir -p $host_build_dir
+cd $host_build_dir
 "$script_dir/qtbase/configure" \
+    -developer-build \
+    -nomake tests \
     -DCMAKE_BUILD_TYPE=Release \
-    -DQT_BUILD_TESTS=OFF \
-    -DQT_BUILD_BENCHMARKS=OFF \
-    -DQT_BUILD_EXAMPLES=OFF \
     -DCMAKE_GENERATOR=Ninja
 
-cmake --build . --parallel
-cmake --install . --prefix "$script_dir/host-install"
+cmake --build . --target host_tools --parallel
 cd "$script_dir"
 
 
@@ -54,7 +53,7 @@ cmake qtbase \
     -B qtbase/build/wasi \
     -DCMAKE_TOOLCHAIN_FILE="$wasi_toolchain_file" \
     -DQT_QMAKE_TARGET_MKSPEC=linux-clang-libc++-32 \
-    -DQT_HOST_PATH="$script_dir/host-install/" \
+    -DQT_HOST_PATH="$host_build_dir" \
     -DCMAKE_GENERATOR=Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=OFF \
