@@ -1,0 +1,6 @@
+# Build artifacts
+host-build/
+wasm32-wasi-install/
+qtbase/
+qtsvg/
+wasi-sdk/
