@@ -70,6 +70,9 @@ cmake qtbase \
     -DQT_BUILD_EXAMPLES=OFF \
     -DQT_BUILD_TESTS=OFF \
     -DQT_BUILD_BENCHMARKS=OFF \
+    -DQT_GENERATE_SBOM=ON \
+    -DQT_SBOM_GENERATE_JSON=ON \
+    -DQT_SBOM_VERIFY=ON \
     -DQT_FEATURE_accessibility_atspi_bridge=OFF \
     -DQT_FEATURE_accessibility=OFF \
     -DQT_FEATURE_action=OFF \
