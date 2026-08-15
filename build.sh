@@ -19,7 +19,7 @@ if [ ! -d wasi-sdk ]; then
     git clone https://github.com/rioam2/wasi-sdk-toolchain.git wasi-sdk
 fi
 cd wasi-sdk
-git reset --hard b032d4fe3c919e0b24f45ccf482be09bf2a9950a
+git reset --hard 25aa5735c9910d0ada9539f3b7e7f43420abcd2e
 cd "$script_dir"
 
 
