@@ -1,12 +1,13 @@
-include("${CMAKE_CURRENT_LIST_DIR}/wasi-sdk/wasi-sdk.toolchain.cmake")
+# Configuration for `wasi-sdk-toolchain`, cloned into `wasi-sdk/` by build.sh.
+# These are plain variables read by that toolchain, which forwards them into 
+# try_compile so compiler probes see the same flags as the real build.
 
-initialize_wasi_toolchain(
-  WIT_BINDGEN_TAG "v0.53.1"
-  WASMTIME_TAG "v41.0.3"
-  WASM_TOOLS_TAG "v1.245.1"
-  WASI_SDK_TAG "wasi-sdk-30"
-  TARGET_TRIPLET "wasm32-wasi"
-  ENABLE_EXPERIMENTAL_SETJMP ON
-  ENABLE_EXPERIMENTAL_STUBS ON
-)
+set(WASI_SDK_VERSION 33)
+set(WASI_SDK_EXCEPTIONS "wasm")
+set(WASI_SDK_SETJMP ON)
+set(WASI_SDK_EMULATED_FEATURES "signal;mman;process-clocks;getpid")
+set(WASI_SDK_LIBC_STUBS ON)
 
+# Bootstrap variant: downloads and caches the pinned SDK release before
+# describing the toolchain.
+include("${CMAKE_CURRENT_LIST_DIR}/wasi-sdk/wasi-sdk-bootstrap.toolchain.cmake")
